@@ -37,15 +37,11 @@ jobs:
       run: |
         cd projects/linux/gmake
         make
-        make config=releasewithsymbols_x86_64
+        make config=release
     - uses: actions/upload-artifact@v4
       with:
         name: gmsv_lz4_linux.dll
-        path: projects/linux/gmake/x86/ReleaseWithSymbols/gmsv_lz4_linux.dll
-    - uses: actions/upload-artifact@v4
-      with:
-        name: gmsv_lz4_linux64.dll
-        path: projects/linux/gmake/x86_64/ReleaseWithSymbols/gmsv_lz4_linux64.dll
+        path: projects/linux/gmake/x86/Release/gmsv_lz4_linux.dll
   build-windows:
     runs-on: windows-2019
     steps:
