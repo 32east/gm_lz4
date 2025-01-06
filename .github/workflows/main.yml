@@ -25,8 +25,8 @@ jobs:
         sudo apt-get update
         sudo apt-get -y --no-install-recommends install build-essential clang-9 cmake gdb git wget g++ g++-multilib gcc-multilib
         gcc --version
-        git clone https://github.com/lz4/lz4.git lz4
-        cd lz4 && make clean && make build && make install && cd ../
+        git clone https://github.com/lz4/lz4.git $HOME/lz4
+        cd $HOME/lz4 && make clean && make build && make install && cd ../
     - name: Generate Project
       run: |
         premake5 --gmcommon=garrysmod_common gmake
