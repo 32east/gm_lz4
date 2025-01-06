@@ -60,9 +60,7 @@ jobs:
       shell: cmd
       run: |
         curl -L -o vs_buildtools.exe https://aka.ms/vs/16/release/vs_buildtools.exe
-        .\vs_buildtools.exe --quiet --wait --norestart --nocache \
-          --includeRecommended --add Microsoft.VisualStudio.Workload.VCTools \
-          --add Microsoft.VisualStudio.Workload.MSBuildTools
+        start /wait vs_buildtools.exe --quiet --wait --norestart --nocache --includeRecommended --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Workload.MSBuildTools
 
     - name: Install Git
       shell: cmd
@@ -107,7 +105,6 @@ jobs:
         msbuild.exe -t:Rebuild -p:Configuration=Release -p:Platform=Win32
         xcopy /Y **\*.dll \output
         dir \output
-
     - name: Build
       run: |
         cd projects/windows/vs2019
