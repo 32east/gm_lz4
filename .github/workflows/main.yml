@@ -22,9 +22,9 @@ jobs:
         tar -xvf premake.tar.gz
         chmod +x premake5
         sudo cp premake5 /usr/bin
+        sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install -y liblz4-dev
-        sudo apt-get install -y liblz4-dev:i386
         sudo apt-get -y --no-install-recommends install build-essential clang-9 cmake gdb git wget g++ g++-multilib gcc-multilib
         gcc --version
         git clone https://github.com/lz4/lz4.git $HOME/lz4
