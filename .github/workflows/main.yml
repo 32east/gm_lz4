@@ -1,91 +1,90 @@
-name: Build and Release
+name: Build
 
 on:
   push:
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
-  build_and_release:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-2019]
-        include:
-          - os: ubuntu-latest
-            dockerfile: 'docker/Dockerfile.linux'
-            output_name: 'gmsv_lz4_linux32.dll'
-          - os: windows-2019
-            dockerfile: 'docker/Dockerfile.windows'
-            output_name: 'gmsv_lz4_windows32.dll'
-
+  build-linux:
+    runs-on: ubuntu-20.04
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Build Docker image
-        run: docker build -f ${{ matrix.dockerfile }} -t gmlz4 .
-
-      - name: Run container and export binary
-        run: |
-          docker run \
-            --name gmlz4_container \
-            --mount type=bind,source="$(pwd)"/output,target=/output \
-            gmlz4
-          cp "$(pwd)"/output/* ./${{ matrix.output_name }}
-          docker rm gmlz4_container
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.output_name }}
-          path: ./${{ matrix.output_name }}
-
-  create_release:
-    needs: build_and_release
-    runs-on: ubuntu-latest
+    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        repository: danielga/garrysmod_common
+        ref: x86-64-support-sourcesdk
+        path: 'garrysmod_common'
+    - name: Install Premake
+      run: |
+        wget https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-linux.tar.gz -O premake.tar.gz
+        tar -xvf premake.tar.gz
+        chmod +x premake5
+        sudo cp premake5 /usr/bin
+        sudo apt-get update
+        sudo apt-get -y --no-install-recommends install \
+		build-essential \
+		clang-9 \
+		cmake \
+		gdb \
+		git \
+		wget \
+		g++ \
+		g++-multilib \
+		gcc-multilib \
+		libstdc++-9-dev:i386 \
+		libc6-dev-i386 \
+		libgcc-9-dev:i386
+        gcc --version
+		git clone https://github.com/lz4/lz4.git lz4
+		cd lz4 && make clean && make build && make install && cd ../
+    - name: Generate Project
+      run: |
+        premake5 --gmcommon=garrysmod_common gmake
+    - name: Make
+      run: |
+        cd projects/linux/gmake
+        make
+        make config=releasewithsymbols_x86_64
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gmsv_lz4_linux.dll
+        path: projects/linux/gmake/x86/ReleaseWithSymbols/gmsv_lz4_linux.dll
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gmsv_lz4_linux64.dll
+        path: projects/linux/gmake/x86_64/ReleaseWithSymbols/gmsv_lz4_linux64.dll
+  build-windows:
+    runs-on: windows-2019
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          path: ./artifacts
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: "[TEST] Release ${{ github.ref }}"
-          draft: true
-          prerelease: false
-
-      - name: Upload release assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/gmsv_lz4_linux32.dll
-          asset_name: gmsv_lz4_linux32.dll
-          asset_content_type: application/octet-stream
-
-      - name: Upload release assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/gmsv_lz4_windows32.dll
-          asset_name: gmsv_lz4_windows32.dll
-          asset_content_type: application/octet-stream
+    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        repository: danielga/garrysmod_common
+        path: 'garrysmod_common'
+        ref: x86-64-support-sourcesdk
+    - name: Install Premake
+      run: |
+         curl -L https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-windows.zip -o premake.zip
+         tar -xf premake.zip
+    - name: Generate Project
+      run: |
+        ./premake5.exe --gmcommon=garrysmod_common vs2019
+    - name: Build
+      run: |
+        cd projects/windows/vs2019
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\msbuild.exe" /p:Configuration=ReleaseWithSymbols /p:Platform=Win32 lz4.sln
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gmsv_lz4_windows.dll
+        path: projects/windows/vs2019/x86/ReleaseWithSymbols/gmsv_lz4_win32.dll
+    - name: Build 64
+      run: |
+        cd projects/windows/vs2019
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\msbuild.exe" /p:Configuration=ReleaseWithSymbols /p:Platform=x64 lz4.sln
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gmsv_lz4_win64.dll
+        path: projects/windows/vs2019/x86_64/ReleaseWithSymbols/gmsv_lz4_win64.dll
