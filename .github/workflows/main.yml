@@ -23,22 +23,10 @@ jobs:
         chmod +x premake5
         sudo cp premake5 /usr/bin
         sudo apt-get update
-        sudo apt-get -y --no-install-recommends install \
-		build-essential \
-		clang-9 \
-		cmake \
-		gdb \
-		git \
-		wget \
-		g++ \
-		g++-multilib \
-		gcc-multilib \
-		libstdc++-9-dev:i386 \
-		libc6-dev-i386 \
-		libgcc-9-dev:i386
+        sudo apt-get -y --no-install-recommends install build-essential clang-9 cmake gdb git wget g++ g++-multilib gcc-multilib libstdc++-9-dev:i386 libc6-dev-i386 libgcc-9-dev:i386
         gcc --version
-		git clone https://github.com/lz4/lz4.git lz4
-		cd lz4 && make clean && make build && make install && cd ../
+	git clone github.com/lz4/lz4.git
+ 	cd lz4 && make clean && make build && make install && cd ../
     - name: Generate Project
       run: |
         premake5 --gmcommon=garrysmod_common gmake
