@@ -62,7 +62,7 @@ jobs:
          curl -L https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-windows.zip -o premake.zip
          tar -xf premake.zip
          git clone https://github.com/lz4/lz4.git lz4
-         cd lz4 && make clean && make build && sudo make install && cd ../
+         cd lz4 && make clean && make build && make install && cd ../
     - name: Generate Project
       run: |
         ./premake5.exe --gmcommon=garrysmod_common vs2019
