@@ -39,14 +39,13 @@ jobs:
         make
         make config=releasewithsymbols_x86_64
         ls
-    - uses: actions/upload-artifact@v4
+    - name: Upload Linux Build Artifacts
+      uses: actions/upload-artifact@v4
       with:
-        name: gmsv_lz4_linux.dll
-        path: x86/ReleaseWithSymbols/gmsv_lz4_linux.dll
-    - uses: actions/upload-artifact@v4
-      with:
-        name: gmsv_eightbit_linux64.dll
-        path: x86_64/ReleaseWithSymbols/gmsv_lz4_linux64.dll
+        name: linux_build_artifacts
+        path: |
+          projects/linux/gmake/**/x86/**
+          projects/linux/gmake/**/x86_64/**
   build-windows:
     runs-on: windows-2019
     steps:
